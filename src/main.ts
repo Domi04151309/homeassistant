@@ -15,6 +15,9 @@ const HOME_ASSISTANT: HomeAssistant = {
   },
   user: { is_admin: false },
   panels: { panel: {} },
+  states: {},
+  devices: {},
+  entities: {},
 };
 
 const navBarCard = document.querySelector<NavBarCard>('nav-bar-card')!;
