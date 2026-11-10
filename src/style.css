@@ -1,4 +1,45 @@
-html,
+:root {
+  --primary-color: #2196f3;
+  --accent-color: #4caf50;
+
+  --ha-font-family-body: ui-sans-serif, system-ui, sans-serif;
+
+  --state-icon-color: var(--secondary-text-color);
+
+  --app-header-background-color: transparent;
+  --app-header-border-bottom: none;
+  --app-header-backdrop-filter: saturate(1.8) blur(8px);
+
+  --sidebar-background-color: var(--primary-background-color);
+  --sidebar-icon-color: var(--secondary-text-color);
+  --sidebar-selected-icon-color: var(--primary-text-color);
+
+  --ha-card-backdrop-filter: var(--app-header-backdrop-filter);
+  --ha-dialog-surface-backdrop-filter: saturate(1.8) blur(16px);
+
+  --primary-background-color: #000;
+  --card-background-color: #000;
+
+  --ha-card-background: rgb(128 128 128 / 10%);
+  --ha-dialog-surface-background: rgb(128 128 128 / 10%);
+
+  --disabled-color: rgb(255 255 255 / 30%);
+  --state-inactive-color: rgb(255 255 255 / 30%);
+
+  --primary-text-color: rgb(222 222 222);
+  --secondary-text-color: rgb(153 153 153);
+}
+
+html {
+  font-family: var(--ha-font-family-body);
+  background: var(--primary-background-color) center/cover
+    url(https://images.unsplash.com/photo-1545125610-f55ef71bfd1f?q=60)
+    no-repeat;
+  color: var(--primary-text-color);
+  height: 100%;
+}
+
 body {
-  font-family: system-ui;
+  margin: 0;
+  padding: 0;
 }

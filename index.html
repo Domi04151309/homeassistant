@@ -7,7 +7,11 @@
     <title>Home Assistant</title>
   </head>
   <body>
-    <div id="app"></div>
+    <nav-bar-card></nav-bar-card>
+
+    <script>
+      globalThis.customCards = [];
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
