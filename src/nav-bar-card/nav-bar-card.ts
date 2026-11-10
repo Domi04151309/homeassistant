@@ -79,8 +79,8 @@ export class NavBarCard extends LitElement {
   private observer: IntersectionObserver | undefined = undefined;
   private unsubscribeSidebar: (() => void) | undefined = undefined;
 
-  @property({ attribute: false }) public homeAssistant:
-    HomeAssistant | undefined = undefined;
+  @property({ attribute: false }) public hass: HomeAssistant | undefined =
+    undefined;
   @property({ type: Object }) public config: object | undefined = undefined;
   @property({ type: Boolean }) public editMode: boolean = false;
 
@@ -89,13 +89,12 @@ export class NavBarCard extends LitElement {
       return;
     }
 
-    this.unsubscribeSidebar =
-      await this.homeAssistant?.connection?.subscribeMessage(
-        (message) => {
-          this.panelOrder = message?.value?.panelOrder ?? [];
-        },
-        { type: 'frontend/subscribe_user_data', key: 'sidebar' },
-      );
+    this.unsubscribeSidebar = await this.hass?.connection?.subscribeMessage(
+      (message) => {
+        this.panelOrder = message?.value?.panelOrder ?? [];
+      },
+      { type: 'frontend/subscribe_user_data', key: 'sidebar' },
+    );
   }
 
   private setMenuButtonVisibility(isVisible: boolean): void {
@@ -144,15 +143,15 @@ export class NavBarCard extends LitElement {
       this.classList.toggle('editMode', this.editMode);
     }
 
-    if (changedProperties.has('homeAssistant') && !this.unsubscribeSidebar) {
+    if (changedProperties.has('hass') && !this.unsubscribeSidebar) {
       this.subscribeSidebar();
     }
   }
 
   render(): TemplateResult {
-    const isAdmin = this.homeAssistant?.user?.is_admin ?? false;
+    const isAdmin = this.hass?.user?.is_admin ?? false;
     const panels =
-      this.panelOrder?.map((key) => this.homeAssistant?.panels?.[key]) ?? [];
+      this.panelOrder?.map((key) => this.hass?.panels?.[key]) ?? [];
 
     const elements = [
       ...panels.slice(0, 5),

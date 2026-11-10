@@ -18,20 +18,16 @@ import {
 const debouncedDeviceTracker = new DebouncedDeviceTracker();
 
 export function getNetworkGraph(
-  homeAssistant: HomeAssistant,
+  hass: HomeAssistant,
   config: NetworkCardConfig,
 ): GraphData {
-  if (!homeAssistant || !config) {
+  if (!hass || !config) {
     return { nodes: [], links: [] };
   }
 
-  const states = homeAssistant?.states ?? {};
-  const devices = Object.values(
-    homeAssistant?.devices ?? {},
-  ) as HomeAssistantDevice[];
-  const entities = Object.values(
-    homeAssistant?.entities ?? {},
-  ) as HomeAssistantEntity[];
+  const states = hass?.states ?? {};
+  const devices = Object.values(hass?.devices ?? {}) as HomeAssistantDevice[];
+  const entities = Object.values(hass?.entities ?? {}) as HomeAssistantEntity[];
 
   const nodes = [
     {
@@ -134,7 +130,7 @@ export function getNetworkGraph(
     const isActive = entities
       .filter((entity) => entity.device_id === device.id)
       .some((entity) => {
-        const state = homeAssistant.states?.[entity.entity_id ?? ''];
+        const state = hass.states?.[entity.entity_id ?? ''];
         return state && !['unavailable', 'unknown'].includes(state.state ?? '');
       });
 

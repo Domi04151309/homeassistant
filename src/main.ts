@@ -1,5 +1,4 @@
-import './nav-bar-card/nav-bar-card';
-import './network-card/network-card';
+import './components';
 import './utilities/ha-icon';
 
 import { NavBarCard } from './nav-bar-card/nav-bar-card';
@@ -85,8 +84,8 @@ const HOME_ASSISTANT = {
 
 const navBarCard = document.querySelector<NavBarCard>('nav-bar-card')!;
 navBarCard.setConfig({});
-navBarCard.homeAssistant = HOME_ASSISTANT;
+navBarCard.hass = HOME_ASSISTANT;
 
 const networkCard = document.querySelector<NetworkCard>('network-card')!;
 networkCard.setConfig({ internet: BINARY_SENSOR_CONNECTION, ignore: [] });
-networkCard.homeAssistant = HOME_ASSISTANT;
+networkCard.hass = HOME_ASSISTANT;

@@ -59,8 +59,8 @@ export class NetworkCard extends LitElement {
     };
   }
 
-  static getStubConfig(homeAssistant: HomeAssistant): NetworkCardConfig {
-    const states = Object.keys(homeAssistant?.states ?? {});
+  static getStubConfig(hass: HomeAssistant): NetworkCardConfig {
+    const states = Object.keys(hass?.states ?? {});
 
     const internet =
       states.find(
@@ -86,8 +86,8 @@ export class NetworkCard extends LitElement {
   private graph: ForceGraph | undefined = undefined;
   private resizeObserver: ResizeObserver | undefined = undefined;
 
-  @property({ attribute: false }) public homeAssistant:
-    HomeAssistant | undefined = undefined;
+  @property({ attribute: false }) public hass: HomeAssistant | undefined =
+    undefined;
   @property({ type: Object }) public config: NetworkCardConfig | undefined =
     undefined;
   @property({ type: Boolean }) public editMode: boolean = false;
@@ -106,12 +106,12 @@ export class NetworkCard extends LitElement {
   }
 
   private updateGraphData(): void {
-    if (!this.homeAssistant || !this.config || !this.graph) {
+    if (!this.hass || !this.config || !this.graph) {
       return;
     }
 
     const currentData = this.graph.graphData();
-    const updatedData = getNetworkGraph(this.homeAssistant, this.config);
+    const updatedData = getNetworkGraph(this.hass, this.config);
 
     if (
       currentData.nodes.length === updatedData.nodes.length &&
@@ -158,7 +158,7 @@ export class NetworkCard extends LitElement {
       this.classList.toggle('editMode', this.editMode);
     }
 
-    if (changedProperties.has('homeAssistant') && this.homeAssistant) {
+    if (changedProperties.has('hass') && this.hass) {
       this.updateGraphData();
     }
   }
