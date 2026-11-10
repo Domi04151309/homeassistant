@@ -19,9 +19,9 @@ export interface HomeAssistant {
     string,
     { url_path?: string; icon?: string; title?: string } | undefined
   >;
-  states?: Record<string, HomeAssistantState>;
-  devices?: Record<string, HomeAssistantDevice>;
-  entities?: Record<string, HomeAssistantEntity>;
+  states?: Record<string, HomeAssistantState | undefined>;
+  devices?: Record<string, HomeAssistantDevice | undefined>;
+  entities?: Record<string, HomeAssistantEntity | undefined>;
 }
 
 export interface LovelaceConfigForm {

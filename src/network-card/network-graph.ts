@@ -1,9 +1,14 @@
+/* eslint-disable unicorn/no-break-in-nested-loop */
 import { GraphData } from 'force-graph';
-import { HomeAssistant } from '../utilities/types.js';
+import {
+  HomeAssistant,
+  HomeAssistantDevice,
+  HomeAssistantEntity,
+  HomeAssistantState,
+} from '../utilities/types.js';
 import { DebouncedDeviceTracker } from './debounced-device-tracker.js';
 import { NetworkCardConfig } from './network-card.js';
 import {
-  getEntityIdsOfIntegration,
   getFritzSmartIcon,
   getMacIcon,
   UNKNOWN,
@@ -20,9 +25,13 @@ export function getNetworkGraph(
     return { nodes: [], links: [] };
   }
 
-  const states = Object.values(homeAssistant?.states ?? {});
-  const devices = Object.values(homeAssistant?.devices ?? {});
-  const entities = Object.values(homeAssistant?.entities ?? {});
+  const states = homeAssistant?.states ?? {};
+  const devices = Object.values(
+    homeAssistant?.devices ?? {},
+  ) as HomeAssistantDevice[];
+  const entities = Object.values(
+    homeAssistant?.entities ?? {},
+  ) as HomeAssistantEntity[];
 
   const nodes = [
     {
@@ -63,93 +72,54 @@ export function getNetworkGraph(
     { source: 'OpenWrt', target: 'Philips-Hue', label: 'LAN' },
   ];
 
-  const hasUplink =
-    states.find((state) => state.entity_id === config.internet)?.state === 'on';
+  const hasUplink = states[config.internet]?.state === 'on';
 
   if (hasUplink) {
     links.push({ source: 'Internet', target: 'FRITZ!Box', label: 'WAN' });
   }
 
-  // Fritz integration
-  const fritzEntityIds = getEntityIdsOfIntegration(entities, 'fritz');
+  // Fritz, luci, and hue integration
+  for (const entity of entities) {
+    const entityId = entity.entity_id ?? '';
 
-  for (const state of states) {
-    if (
-      !state.entity_id?.startsWith('device_tracker.') ||
-      !fritzEntityIds.has(state.entity_id) ||
-      state.state !== 'home' ||
-      config.ignore.includes(state.entity_id)
-    ) {
+    if (config.ignore.includes(entityId)) {
       continue;
     }
 
-    nodes.push({
-      id: state.entity_id ?? '',
-      name: state.attributes?.host_name ?? UNKNOWN,
-      icon: getMacIcon(state.attributes?.mac ?? ''),
-      group: 'device',
-    });
+    if (entityId.startsWith('device_tracker.')) {
+      const state = states[entityId];
 
-    links.push({
-      source: 'FRITZ!Box',
-      target: state.entity_id ?? '',
-      label: state.attributes?.connection_type ?? UNKNOWN,
-    });
-  }
+      if (!state || !debouncedDeviceTracker.isHome(state)) {
+        continue;
+      }
 
-  // Luci integration
-  const luciEntityIds = getEntityIdsOfIntegration(entities, 'luci');
-
-  for (const state of states) {
-    if (
-      !state.entity_id?.startsWith('device_tracker.') ||
-      !luciEntityIds.has(state.entity_id) ||
-      !debouncedDeviceTracker.isHome(state) ||
-      config.ignore.includes(state.entity_id)
-    ) {
-      continue;
+      switch (entity.platform) {
+        case 'fritz': {
+          pushFritzNode(state, nodes, links);
+          break;
+        }
+        case 'luci': {
+          pushLuciNode(state, nodes, links);
+          break;
+        }
+      }
     }
 
-    nodes.push({
-      id: state.entity_id ?? '',
-      name: state.attributes?.host_name ?? UNKNOWN,
-      icon: getMacIcon(state.attributes?.mac ?? ''),
-      group: 'device',
-    });
+    // eslint-disable-next-line unicorn/prefer-continue
+    if (entityId.startsWith('light.')) {
+      const state = states[entityId];
 
-    links.push({
-      source: 'OpenWrt',
-      target: state.entity_id ?? '',
-      label: 'WLAN',
-    });
-  }
+      if (
+        !state ||
+        ['unavailable', 'unknown'].includes(state.state ?? '') ||
+        state.attributes?.is_hue_group !== undefined ||
+        state.attributes?.group_type !== undefined
+      ) {
+        continue;
+      }
 
-  // Hue integration
-  const hueEntityIds = getEntityIdsOfIntegration(entities, 'hue');
-
-  for (const state of states) {
-    if (
-      !state.entity_id?.startsWith('light.') ||
-      !hueEntityIds.has(state.entity_id) ||
-      ['unavailable', 'unknown'].includes(state.state ?? '') ||
-      state.attributes?.is_hue_group !== undefined ||
-      state.attributes?.group_type !== undefined
-    ) {
-      continue;
+      pushHueNode(state, nodes, links);
     }
-
-    nodes.push({
-      id: state.entity_id ?? '',
-      name: state.attributes?.friendly_name ?? UNKNOWN,
-      icon: state.attributes?.icon ?? UNKNOWN_ICON,
-      group: 'device',
-    });
-
-    links.push({
-      source: 'Philips-Hue',
-      target: state.entity_id ?? '',
-      label: 'Zigbee',
-    });
   }
 
   // Fritzbox integration
@@ -172,18 +142,83 @@ export function getNetworkGraph(
       continue;
     }
 
-    nodes.push({
-      id: device.id ?? '',
-      name: device.name_by_user ?? UNKNOWN,
-      icon: getFritzSmartIcon(device),
-      group: 'device',
-    });
-    links.push({
-      source: 'FRITZ!Smart',
-      target: device.id ?? '',
-      label: 'DECT',
-    });
+    pushFritzBoxNode(device, nodes, links);
   }
 
   return { nodes, links };
+}
+
+function pushFritzNode(
+  state: HomeAssistantState,
+  nodes: unknown[],
+  links: unknown[],
+): void {
+  nodes.push({
+    id: state.entity_id ?? '',
+    name: state.attributes?.host_name ?? UNKNOWN,
+    icon: getMacIcon(state.attributes?.mac ?? ''),
+    group: 'device',
+  });
+
+  links.push({
+    source: 'FRITZ!Box',
+    target: state.entity_id ?? '',
+    label: state.attributes?.connection_type ?? UNKNOWN,
+  });
+}
+
+function pushLuciNode(
+  state: HomeAssistantState,
+  nodes: unknown[],
+  links: unknown[],
+): void {
+  nodes.push({
+    id: state.entity_id ?? '',
+    name: state.attributes?.host_name ?? UNKNOWN,
+    icon: getMacIcon(state.attributes?.mac ?? ''),
+    group: 'device',
+  });
+
+  links.push({
+    source: 'OpenWrt',
+    target: state.entity_id ?? '',
+    label: 'WLAN',
+  });
+}
+
+function pushHueNode(
+  state: HomeAssistantState,
+  nodes: unknown[],
+  links: unknown[],
+): void {
+  nodes.push({
+    id: state.entity_id ?? '',
+    name: state.attributes?.friendly_name ?? UNKNOWN,
+    icon: state.attributes?.icon ?? UNKNOWN_ICON,
+    group: 'device',
+  });
+
+  links.push({
+    source: 'Philips-Hue',
+    target: state.entity_id ?? '',
+    label: 'Zigbee',
+  });
+}
+
+function pushFritzBoxNode(
+  device: HomeAssistantDevice,
+  nodes: unknown[],
+  links: unknown[],
+): void {
+  nodes.push({
+    id: device.id ?? '',
+    name: device.name_by_user ?? UNKNOWN,
+    icon: getFritzSmartIcon(device),
+    group: 'device',
+  });
+  links.push({
+    source: 'FRITZ!Smart',
+    target: device.id ?? '',
+    label: 'DECT',
+  });
 }

@@ -1,4 +1,4 @@
-import { HomeAssistantDevice, HomeAssistantEntity } from '../utilities/types';
+import { HomeAssistantDevice } from '../utilities/types';
 
 export const UNKNOWN = 'unknown';
 
@@ -60,17 +60,6 @@ export function getFritzSmartIcon(device: HomeAssistantDevice): string {
   }
 
   return UNKNOWN_ICON;
-}
-
-export function getEntityIdsOfIntegration(
-  entities: HomeAssistantEntity[],
-  integration: string,
-): Set<string> {
-  return new Set(
-    entities
-      .filter((entity) => entity.platform === integration)
-      .map((entity) => entity.entity_id ?? ''),
-  );
 }
 
 export function getThemeColor(element: Element, variableName: string): string {
