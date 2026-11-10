@@ -46,7 +46,7 @@ export interface HomeAssistantState {
 export interface HomeAssistantDevice {
   id?: string;
   model?: string;
-  identifiers?: string[];
+  identifiers?: string[][];
   name_by_user?: string;
 }
 
