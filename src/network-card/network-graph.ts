@@ -130,8 +130,8 @@ export function getNetworkGraph(
     const isActive = entities
       .filter((entity) => entity.device_id === device.id)
       .some((entity) => {
-        const state = hass.states?.[entity.entity_id ?? ''];
-        return state && !['unavailable', 'unknown'].includes(state.state ?? '');
+        const state = states[entity.entity_id ?? ''];
+        return !['unavailable', 'unknown'].includes(state?.state ?? '');
       });
 
     if (!isActive) {
