@@ -108,8 +108,7 @@ export function getNetworkGraph(
       if (
         !state ||
         ['unavailable', 'unknown'].includes(state.state ?? '') ||
-        state.attributes?.is_hue_group !== undefined ||
-        state.attributes?.group_type !== undefined
+        state.attributes?.is_hue_group
       ) {
         continue;
       }

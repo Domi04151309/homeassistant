@@ -12,6 +12,7 @@ import type {
   LovelaceConfigForm,
   LovelaceGridOptions,
 } from '../utilities/types';
+import { getPanelOrder, setPanelOrder } from './utilities';
 
 @customElement('nav-bar-card')
 export class NavBarCard extends LitElement {
@@ -89,9 +90,12 @@ export class NavBarCard extends LitElement {
       return;
     }
 
+    this.panelOrder = getPanelOrder();
+
     this.unsubscribeSidebar = await this.hass?.connection?.subscribeMessage(
       (message) => {
         this.panelOrder = message?.value?.panelOrder ?? [];
+        setPanelOrder(this.panelOrder);
       },
       { type: 'frontend/subscribe_user_data', key: 'sidebar' },
     );
