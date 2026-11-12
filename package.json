@@ -1,5 +1,5 @@
 {
-  "name": "homeassistant",
+  "name": "home-assistant",
   "version": "0.0.0",
   "private": true,
   "type": "module",
