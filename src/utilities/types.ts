@@ -13,6 +13,10 @@ export interface HomeAssistant {
       callback: (message: { value?: { panelOrder?: string[] } }) => void,
       options: { type: string; key: string },
     ) => Promise<() => void>;
+    subscribeEvents: (
+      callback: (event: { data?: { new_state?: HomeAssistantState } }) => void,
+      eventType: string,
+    ) => void;
   };
   user?: { is_admin?: boolean };
   panels?: Record<

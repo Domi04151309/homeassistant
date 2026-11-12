@@ -6,7 +6,7 @@ import {
   HomeAssistantEntity,
   HomeAssistantState,
 } from '../utilities/types.js';
-import { DebouncedDeviceTracker } from './debounced-device-tracker.js';
+import { debouncedDeviceTracker } from './debounced-device-tracker.js';
 import { NetworkCardConfig } from './network-card.js';
 import {
   getFritzSmartIcon,
@@ -14,8 +14,6 @@ import {
   UNKNOWN,
   UNKNOWN_ICON,
 } from './utilities.js';
-
-const debouncedDeviceTracker = new DebouncedDeviceTracker();
 
 export function getNetworkGraph(
   hass: HomeAssistant,
