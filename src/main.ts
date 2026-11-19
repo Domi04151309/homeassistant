@@ -19,6 +19,7 @@ const HOME_ASSISTANT = {
       callback({ value: { panelOrder: ['panel', 'panel', 'panel', 'panel'] } });
       return Promise.resolve(() => {});
     },
+    subscribeEvents(): void {},
   },
   user: { is_admin: false },
   panels: { panel: {} },

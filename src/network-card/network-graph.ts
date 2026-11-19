@@ -100,7 +100,7 @@ export function getNetworkGraph(
     }
 
     // eslint-disable-next-line unicorn/prefer-continue
-    if (entityId.startsWith('light.')) {
+    if (entityId.startsWith('light.') && entity.platform === 'hue') {
       const state = states[entityId];
 
       if (
