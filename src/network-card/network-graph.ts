@@ -83,7 +83,12 @@ export function getNetworkGraph(
     if (entityId.startsWith('device_tracker.')) {
       const state = states[entityId];
 
-      if (!state || !debouncedDeviceTracker.isHome(state)) {
+      if (!state || !['home', 'not_home'].includes(state.state ?? '')) {
+        continue;
+      }
+
+      if (!debouncedDeviceTracker.isHome(state)) {
+        pushDisconnectedNode(state, nodes);
         continue;
       }
 
@@ -139,6 +144,18 @@ export function getNetworkGraph(
   }
 
   return { nodes, links };
+}
+
+function pushDisconnectedNode(
+  state: HomeAssistantState,
+  nodes: unknown[],
+): void {
+  nodes.push({
+    id: state.entity_id ?? '',
+    name: state.attributes?.host_name ?? UNKNOWN,
+    icon: getMacIcon(state.attributes?.mac ?? ''),
+    group: 'disconnected',
+  });
 }
 
 function pushFritzNode(

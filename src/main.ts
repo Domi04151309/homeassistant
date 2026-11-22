@@ -6,6 +6,7 @@ import { NetworkCard } from './network-card/network-card';
 import { HomeAssistant } from './utilities/types';
 
 const BINARY_SENSOR_CONNECTION = 'binary_sensor.connection';
+const DEVICE_TRACKER_DISCONNECTED = 'device_tracker.disconnected';
 const DEVICE_TRACKER_FRITZ_BOX = 'device_tracker.fritz_box';
 const DEVICE_TRACKER_OPEN_WRT = 'device_tracker.open_wrt';
 const LIGHT_HUE = 'light.hue';
@@ -27,6 +28,14 @@ const HOME_ASSISTANT = {
     'binary_sensor.connection': {
       entity_id: BINARY_SENSOR_CONNECTION,
       state: 'on',
+    },
+    'device_tracker.disconnected': {
+      entity_id: DEVICE_TRACKER_DISCONNECTED,
+      state: 'not_home',
+      attributes: {
+        host_name: DEVICE_TRACKER_DISCONNECTED,
+        connection_type: DEVICE_TRACKER_DISCONNECTED,
+      },
     },
     'device_tracker.fritz_box': {
       entity_id: DEVICE_TRACKER_FRITZ_BOX,
@@ -64,6 +73,10 @@ const HOME_ASSISTANT = {
     },
   },
   entities: {
+    'device_tracker.disconnected': {
+      entity_id: DEVICE_TRACKER_DISCONNECTED,
+      platform: 'fritz',
+    },
     'device_tracker.fritz_box': {
       entity_id: DEVICE_TRACKER_FRITZ_BOX,
       platform: 'fritz',

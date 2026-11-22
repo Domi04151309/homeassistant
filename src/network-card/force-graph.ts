@@ -1,5 +1,5 @@
-import ForceGraph, { LinkObject, NodeObject } from 'force-graph';
-import { getThemeColor, UNKNOWN } from './utilities.js';
+import ForceGraph, { LinkObject } from 'force-graph';
+import { ExtendedNodeObject, getThemeColor, UNKNOWN } from './utilities.js';
 
 import './mdi.js';
 import { getMdiPath } from './mdi.js';
@@ -19,6 +19,43 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
     element,
     '--primary-background-color',
   );
+
+  function getFillColor(node: ExtendedNodeObject): string {
+    switch (node.group) {
+      case 'disconnected': {
+        return primaryBackgroundColor;
+      }
+      case 'hub': {
+        return accentColor;
+      }
+      default: {
+        return primaryColor;
+      }
+    }
+  }
+
+  function getIconColor(node: ExtendedNodeObject): string {
+    switch (node.group) {
+      case 'disconnected': {
+        return secondaryTextColor;
+      }
+      default: {
+        return primaryTextColor;
+      }
+    }
+  }
+
+  function getTextColor(node: ExtendedNodeObject): string {
+    switch (node.group) {
+      case 'disconnected': {
+        return secondaryTextColor;
+      }
+      default: {
+        return primaryTextColor;
+      }
+    }
+  }
+
   // @ts-expect-error -- Wrong type definitions
   const graph = (ForceGraph()(element) as ForceGraph)
     .width(element.clientWidth)
@@ -31,8 +68,8 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
     .linkCanvasObject(
       (link: LinkObject, context: CanvasRenderingContext2D): void => {
         const label = (link as { label?: string }).label ?? UNKNOWN;
-        const start = link.source as NodeObject;
-        const end = link.target as NodeObject;
+        const start = link.source as ExtendedNodeObject;
+        const end = link.target as ExtendedNodeObject;
 
         let textAngle = Math.atan2(
           (end.y ?? 0) - (start.y ?? 0),
@@ -78,7 +115,7 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
     .linkCanvasObjectMode(() => 'after')
     .nodeCanvasObject(
       (
-        node: NodeObject & { group?: string; name?: string; icon?: string },
+        node: ExtendedNodeObject,
         context: CanvasRenderingContext2D,
         globalScale: number,
       ): void => {
@@ -91,7 +128,7 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
           2 * Math.PI,
           false,
         );
-        context.fillStyle = node.group === 'hub' ? accentColor : primaryColor;
+        context.fillStyle = getFillColor(node);
         context.fill();
 
         const icon = getMdiPath(node.icon ?? '');
@@ -100,14 +137,14 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
         context.scale(iconScale, iconScale);
         context.translate(-iconSize / 2, -iconSize / 2);
 
-        context.fillStyle = primaryTextColor;
+        context.fillStyle = getIconColor(node);
         context.fill(icon);
         context.restore();
 
         context.font = `${fontSize / globalScale}px system-ui`;
         context.textAlign = 'center';
         context.textBaseline = 'top';
-        context.fillStyle = primaryTextColor;
+        context.fillStyle = getTextColor(node);
         context.fillText(
           node.name ?? '',
           node.x ?? 0,

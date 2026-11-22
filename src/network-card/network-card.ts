@@ -15,6 +15,7 @@ import {
   LovelaceGridOptions,
 } from '../utilities/types.js';
 import ForceGraph from 'force-graph';
+import { ExtendedNodeObject } from './utilities.js';
 
 export interface NetworkCardConfig {
   internet: string;
@@ -121,7 +122,10 @@ export class NetworkCard extends LitElement {
     }
 
     const nodeMap = new Map(currentData.nodes.map((node) => [node.id, node]));
-    const nodes = updatedData.nodes.map((node) => nodeMap.get(node.id) ?? node);
+    const nodes = updatedData.nodes.map((node: ExtendedNodeObject) => ({
+      ...(nodeMap.get(node.id) ?? node),
+      group: node.group,
+    }));
 
     this.graph.graphData({ nodes, links: updatedData.links });
   }
