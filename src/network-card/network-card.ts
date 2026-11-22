@@ -111,23 +111,18 @@ export class NetworkCard extends LitElement {
       return;
     }
 
-    const currentData = this.graph.graphData();
     const updatedData = getNetworkGraph(this.hass, this.config);
+    const currentData = new Map(
+      this.graph.graphData().nodes.map((node) => [node.id, node]),
+    );
 
-    if (
-      currentData.nodes.length === updatedData.nodes.length &&
-      currentData.links.length === updatedData.links.length
-    ) {
-      return;
-    }
-
-    const nodeMap = new Map(currentData.nodes.map((node) => [node.id, node]));
-    const nodes = updatedData.nodes.map((node: ExtendedNodeObject) => ({
-      ...(nodeMap.get(node.id) ?? node),
-      group: node.group,
-    }));
-
-    this.graph.graphData({ nodes, links: updatedData.links });
+    this.graph.graphData({
+      nodes: updatedData.nodes.map((node: ExtendedNodeObject) => ({
+        ...(currentData.get(node.id) ?? node),
+        group: node.group,
+      })),
+      links: updatedData.links,
+    });
   }
 
   private initializeResizeObserver(): void {
