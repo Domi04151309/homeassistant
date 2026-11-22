@@ -1,4 +1,4 @@
-import { NodeObject } from 'force-graph';
+import { LinkObject, NodeObject } from 'force-graph';
 import { HomeAssistantDevice } from '../utilities/types';
 
 export const UNKNOWN = 'unknown';
@@ -8,7 +8,11 @@ export const UNKNOWN_ICON = 'mdi:devices';
 export interface ExtendedNodeObject extends NodeObject {
   name?: string;
   icon?: string;
-  group?: string;
+  group?: 'hub' | 'device' | 'disconnected';
+}
+
+export interface ExtendedLinkObject extends LinkObject {
+  label?: string;
 }
 
 export function getMacIcon(mac: string): string {

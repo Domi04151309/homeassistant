@@ -1,5 +1,10 @@
-import ForceGraph, { LinkObject } from 'force-graph';
-import { ExtendedNodeObject, getThemeColor, UNKNOWN } from './utilities.js';
+import ForceGraph from 'force-graph';
+import {
+  ExtendedLinkObject,
+  ExtendedNodeObject,
+  getThemeColor,
+  UNKNOWN,
+} from './utilities.js';
 
 import './mdi.js';
 import { getMdiPath } from './mdi.js';
@@ -61,15 +66,16 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
     .width(element.clientWidth)
     .height(element.clientHeight)
     .graphData({ nodes: [], links: [] })
-    .linkDirectionalParticles(4)
-    .linkDirectionalParticleSpeed(0.001)
-    .linkDirectionalParticleWidth(2)
     .linkColor(() => secondaryTextColor)
     .linkCanvasObject(
-      (link: LinkObject, context: CanvasRenderingContext2D): void => {
-        const label = (link as { label?: string }).label ?? UNKNOWN;
+      (link: ExtendedLinkObject, context: CanvasRenderingContext2D): void => {
+        const label = link.label ?? UNKNOWN;
         const start = link.source as ExtendedNodeObject;
         const end = link.target as ExtendedNodeObject;
+
+        if (start.group === 'disconnected' || end.group === 'disconnected') {
+          return;
+        }
 
         let textAngle = Math.atan2(
           (end.y ?? 0) - (start.y ?? 0),
@@ -109,9 +115,18 @@ export function createForceGraph(element: HTMLElement): ForceGraph {
         context.restore();
       },
     )
-    .linkLineDash((link: LinkObject & { label?: string }) =>
-      ['DECT', 'WLAN', 'Zigbee'].includes(link.label ?? '') ? [4, 4] : [],
-    )
+    .linkLineDash((link: ExtendedLinkObject) => {
+      const start = link.source as ExtendedNodeObject;
+      const end = link.target as ExtendedNodeObject;
+
+      if (start.group === 'disconnected' || end.group === 'disconnected') {
+        return [0, 1];
+      }
+
+      return ['DECT', 'WLAN', 'Zigbee'].includes(link.label ?? '')
+        ? [4, 4]
+        : [];
+    })
     .linkCanvasObjectMode(() => 'after')
     .nodeCanvasObject(
       (

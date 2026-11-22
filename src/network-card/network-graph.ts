@@ -9,6 +9,8 @@ import {
 import { debouncedDeviceTracker } from './debounced-device-tracker.js';
 import { NetworkCardConfig } from './network-card.js';
 import {
+  ExtendedLinkObject,
+  ExtendedNodeObject,
   getFritzSmartIcon,
   getMacIcon,
   UNKNOWN,
@@ -27,7 +29,7 @@ export function getNetworkGraph(
   const devices = Object.values(hass?.devices ?? {}) as HomeAssistantDevice[];
   const entities = Object.values(hass?.entities ?? {}) as HomeAssistantEntity[];
 
-  const nodes = [
+  const nodes: ExtendedNodeObject[] = [
     {
       id: 'Internet',
       name: 'Internet',
@@ -75,20 +77,14 @@ export function getNetworkGraph(
   // Fritz, luci, and hue integration
   for (const entity of entities) {
     const entityId = entity.entity_id ?? '';
+    const state = states[entityId];
 
-    if (config.ignore.includes(entityId)) {
+    if (!state || config.ignore.includes(entityId)) {
       continue;
     }
 
     if (entityId.startsWith('device_tracker.')) {
-      const state = states[entityId];
-
-      if (!state || !['home', 'not_home'].includes(state.state ?? '')) {
-        continue;
-      }
-
-      if (!debouncedDeviceTracker.isHome(state)) {
-        pushDisconnectedNode(state, nodes);
+      if (!['home', 'not_home'].includes(state.state ?? '')) {
         continue;
       }
 
@@ -106,13 +102,7 @@ export function getNetworkGraph(
 
     // eslint-disable-next-line unicorn/prefer-continue
     if (entityId.startsWith('light.') && entity.platform === 'hue') {
-      const state = states[entityId];
-
-      if (
-        !state ||
-        ['unavailable', 'unknown'].includes(state.state ?? '') ||
-        state.attributes?.is_hue_group
-      ) {
+      if (state.attributes?.is_hue_group) {
         continue;
       }
 
@@ -136,38 +126,22 @@ export function getNetworkGraph(
         return !['unavailable', 'unknown'].includes(state?.state ?? '');
       });
 
-    if (!isActive) {
-      continue;
-    }
-
-    pushFritzBoxNode(device, nodes, links);
+    pushFritzBoxNode(device, isActive, nodes, links);
   }
 
   return { nodes, links };
 }
 
-function pushDisconnectedNode(
-  state: HomeAssistantState,
-  nodes: unknown[],
-): void {
-  nodes.push({
-    id: state.entity_id ?? '',
-    name: state.attributes?.host_name ?? UNKNOWN,
-    icon: getMacIcon(state.attributes?.mac ?? ''),
-    group: 'disconnected',
-  });
-}
-
 function pushFritzNode(
   state: HomeAssistantState,
-  nodes: unknown[],
-  links: unknown[],
+  nodes: ExtendedNodeObject[],
+  links: ExtendedLinkObject[],
 ): void {
   nodes.push({
     id: state.entity_id ?? '',
     name: state.attributes?.host_name ?? UNKNOWN,
     icon: getMacIcon(state.attributes?.mac ?? ''),
-    group: 'device',
+    group: debouncedDeviceTracker.isHome(state) ? 'device' : 'disconnected',
   });
 
   links.push({
@@ -179,14 +153,14 @@ function pushFritzNode(
 
 function pushLuciNode(
   state: HomeAssistantState,
-  nodes: unknown[],
-  links: unknown[],
+  nodes: ExtendedNodeObject[],
+  links: ExtendedLinkObject[],
 ): void {
   nodes.push({
     id: state.entity_id ?? '',
     name: state.attributes?.host_name ?? UNKNOWN,
     icon: getMacIcon(state.attributes?.mac ?? ''),
-    group: 'device',
+    group: debouncedDeviceTracker.isHome(state) ? 'device' : 'disconnected',
   });
 
   links.push({
@@ -198,14 +172,16 @@ function pushLuciNode(
 
 function pushHueNode(
   state: HomeAssistantState,
-  nodes: unknown[],
-  links: unknown[],
+  nodes: ExtendedNodeObject[],
+  links: ExtendedLinkObject[],
 ): void {
   nodes.push({
     id: state.entity_id ?? '',
     name: state.attributes?.friendly_name ?? UNKNOWN,
     icon: state.attributes?.icon ?? UNKNOWN_ICON,
-    group: 'device',
+    group: ['unavailable', 'unknown'].includes(state.state ?? '')
+      ? 'disconnected'
+      : 'device',
   });
 
   links.push({
@@ -217,14 +193,15 @@ function pushHueNode(
 
 function pushFritzBoxNode(
   device: HomeAssistantDevice,
-  nodes: unknown[],
-  links: unknown[],
+  isActive: boolean,
+  nodes: ExtendedNodeObject[],
+  links: ExtendedLinkObject[],
 ): void {
   nodes.push({
     id: device.id ?? '',
     name: device.name_by_user ?? UNKNOWN,
     icon: getFritzSmartIcon(device),
-    group: 'device',
+    group: isActive ? 'device' : 'disconnected',
   });
   links.push({
     source: 'FRITZ!Smart',
